@@ -1,4 +1,4 @@
 package tech.buildrun.springsecurity.controller.dto;
 
-public record CreateUserDto(String username, String password) {
+public record CreateUserDto(String username, String password, boolean gerarSenhaAleatoria) {
 }
