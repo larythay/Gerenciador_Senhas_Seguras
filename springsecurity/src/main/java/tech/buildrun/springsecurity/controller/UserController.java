@@ -15,6 +15,7 @@ import tech.buildrun.springsecurity.entities.Role;
 import tech.buildrun.springsecurity.entities.User;
 import tech.buildrun.springsecurity.repository.RoleRepository;
 import tech.buildrun.springsecurity.repository.UserRepository;
+import tech.buildrun.springsecurity.service.PasswordGeneratorService;
 
 import java.util.List;
 import java.util.Set;
@@ -28,19 +29,22 @@ public class UserController {
 
     private final BCryptPasswordEncoder passwordEncoder;
 
+    private final PasswordGeneratorService passwordGeneratorService;
+
     public UserController(UserRepository userRepository,
-                          RoleRepository roleRepository, BCryptPasswordEncoder passwordEncoder) {
+                          RoleRepository roleRepository, BCryptPasswordEncoder passwordEncoder, PasswordGeneratorService passwordGeneratorService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
-    }
+        this.passwordGeneratorService = passwordGeneratorService;
+
+    }   
 
     @Transactional
     @PostMapping("/users")
     public ResponseEntity<Void> newUser(@RequestBody CreateUserDto dto) {
 
         var basicRole = roleRepository.findByName(Role.Values.BASIC.name());
-
         var userFromDb = userRepository.findByUsername(dto.username());
 
         if(userFromDb.isPresent()) {
@@ -49,7 +53,14 @@ public class UserController {
 
         var user = new User();
         user.setUsername(dto.username());
-        user.setPassword(passwordEncoder.encode(dto.password()));
+        String senha;
+        if (dto.gerarSenhaAleatoria()) {
+            senha = passwordGeneratorService.generateStrongPassword(12);
+            passwordGeneratorService.gerarSenhaEEnviar(dto.username());
+        } else {
+            senha = dto.password();
+        }
+        user.setPassword(passwordEncoder.encode(senha));
         user.setRoles(Set.of(basicRole));
 
         userRepository.save(user);

@@ -24,8 +24,7 @@ public class TokenController {
 
     private final UserRepository userRepository;
 
-    private BCryptPasswordEncoder passwordEncoder;
-    private Object scopes; //Não sei se ta certo!!
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public TokenController(JwtEncoder jwtEncoder,
                            UserRepository userRepository,
@@ -47,11 +46,11 @@ public class TokenController {
         var now = Instant.now();
         var expiresIn = 300L;
 
-        var scope = user.get().getRoles()
-                .stream()
+        var roles = user.get().getRoles();
+        var scopes = roles.stream()
                 .map(Role::getName)
                 .collect(Collectors.joining(" "));
-        
+
         var claims = JwtClaimsSet.builder()
                 .issuer("mybackend")
                 .subject(user.get().getUserId().toString())
