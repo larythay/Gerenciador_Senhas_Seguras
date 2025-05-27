@@ -16,7 +16,9 @@ import tech.buildrun.springsecurity.entities.User;
 import tech.buildrun.springsecurity.repository.RoleRepository;
 import tech.buildrun.springsecurity.repository.UserRepository;
 import tech.buildrun.springsecurity.service.PasswordGeneratorService;
+import tech.buildrun.springsecurity.service.PasswordValidationService;
 
+import java.security.MessageDigest;
 import java.util.List;
 import java.util.Set;
 
@@ -24,24 +26,25 @@ import java.util.Set;
 public class UserController {
 
     private final UserRepository userRepository;
-
     private final RoleRepository roleRepository;
-
     private final BCryptPasswordEncoder passwordEncoder;
-
     private final PasswordGeneratorService passwordGeneratorService;
+    private final PasswordValidationService passwordValidationService;
 
     public UserController(UserRepository userRepository,
-                          RoleRepository roleRepository, BCryptPasswordEncoder passwordEncoder, PasswordGeneratorService passwordGeneratorService) {
+                          RoleRepository roleRepository,
+                          BCryptPasswordEncoder passwordEncoder,
+                          PasswordGeneratorService passwordGeneratorService,
+                          PasswordValidationService passwordValidationService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.passwordGeneratorService = passwordGeneratorService;
-
-    }   
+        this.passwordValidationService = passwordValidationService;
+    }
 
     @Transactional
-    @PostMapping("/users")
+    @PostMapping("/register")
     public ResponseEntity<Void> newUser(@RequestBody CreateUserDto dto) {
 
         var basicRole = roleRepository.findByName(Role.Values.BASIC.name());
@@ -60,6 +63,26 @@ public class UserController {
         } else {
             senha = dto.password();
         }
+
+        try {
+            MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+            byte[] hashBytes = sha1.digest(senha.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashBytes) {
+                sb.append(String.format("%02X", b));
+            }
+            String sha1Hash = sb.toString();
+            String prefix = sha1Hash.substring(0, 5);
+            String suffix = sha1Hash.substring(5);
+
+            boolean pwned = passwordValidationService.isPasswordPwned(prefix, suffix);
+            if (pwned) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha já foi exposta em vazamentos. Escolha outra senha.");
+            }
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao validar senha.", e);
+        }
+
         user.setPassword(passwordEncoder.encode(senha));
         user.setRoles(Set.of(basicRole));
 

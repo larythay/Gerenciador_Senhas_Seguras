@@ -1,0 +1,19 @@
+meta {
+  name: Cadastro
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "teste",
+    "password": "senhaForte123",
+    "gerarSenhaAleatoria": false
+  }
+}

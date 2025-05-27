@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Gerenciador_Senhas_Seguras.iml" filepath="$PROJECT_DIR$/.idea/Gerenciador_Senhas_Seguras.iml" />
-      <module fileurl="file://$PROJECT_DIR$/springsecurity/springsecurity.iml" filepath="$PROJECT_DIR$/springsecurity/springsecurity.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/springsecurity.iml" filepath="$PROJECT_DIR$/.idea/springsecurity.iml" />
     </modules>
   </component>
 </project>
